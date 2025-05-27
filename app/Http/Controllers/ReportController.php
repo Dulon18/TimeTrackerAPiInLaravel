@@ -23,7 +23,7 @@ class ReportController extends Controller
             'from' => 'required|date',
             'to' => 'required|date',
         ]);
-        dd($request->all());
+        //dd($request->all());
 
         $from = Carbon::parse($request->from)->startOfDay();
         $to = Carbon::parse($request->to)->endOfDay();
