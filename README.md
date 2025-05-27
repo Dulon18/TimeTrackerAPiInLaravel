@@ -33,3 +33,9 @@ php artisan db:seed
 
 ## 7. Start the development server
 php artisan serve
+
+🗃️ Database Schema
+
+
+![image](https://github.com/user-attachments/assets/34d6238c-fef7-4a82-9209-2b43cc2d1d96)
+
