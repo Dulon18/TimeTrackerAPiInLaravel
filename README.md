@@ -8,3 +8,27 @@
 </p>
 
 <h1>Time Tracker API</h1>
+
+# Set up or Clone process
+## 1. Clone the repository
+git clone https://github.com/your-username/your-project.git
+cd your-project
+
+## 2. Install dependencies
+composer install
+
+## 3. Copy .env file and generate app key
+
+cp .env.example .env
+php artisan key:generate
+
+## 4. Configure your .env file
+## (Set your DB credentials and other environment settings)
+
+## 5. Run database migrations (and optionally seeders)
+php artisan migrate
+## 6 Run Seeder
+php artisan db:seed
+
+## 7. Start the development server
+php artisan serve
