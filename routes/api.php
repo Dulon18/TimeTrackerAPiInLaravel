@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\TimeLogController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
@@ -30,8 +31,12 @@ Route::prefix('v1')->group(function()
         Route::post('/project/delete/{id}',[ProjectController::class,'delete']);
 
         // Time Log routes
-        Route::post('/timelog/start', [TimeLogController::class, 'start']);
-        Route::post('/timelog/stop', [TimeLogController::class, 'stop']);
+        Route::post('/timelog/{project_id}/start', [TimeLogController::class, 'start']);
+        Route::post('/timelog/{project_id}/stop', [TimeLogController::class, 'stop']);
+
+        //report
+        Route::get('/report', [ReportController::class, 'index']);
+        Route::get('/report/summery', [ReportController::class, 'summary']);
     });
 });
 

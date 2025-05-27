@@ -40,7 +40,7 @@ class ClientController extends Controller
             if($clientData == null)
             {
                 $response = "Data is not Found";
-                return $this->response->errorResponse($response);
+                return $this->response->errorResponse($response,$clientData);
             }
             $client = [
                 'name'=>$clientData->name,
@@ -97,7 +97,7 @@ class ClientController extends Controller
             if($client == null)
             {
                 $response = "Data is not Found";
-                return $this->response->errorResponse($response);
+                return $this->response->errorResponse($response,$client);
             }
             return $this->response->successResponse($client, 'Client info deleted successfully');
          }

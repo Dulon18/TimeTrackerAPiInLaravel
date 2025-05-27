@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Project;
 use App\Models\TimeLog;
 use App\Services\ResponseService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 
 class TimeLogController extends Controller
@@ -15,54 +17,99 @@ class TimeLogController extends Controller
     {
         $this->response = $response;
     }
-   public function start(Request $request)
+   public function start($projectId)
    {
         try {
-            $request->validate([
-                'project_id' => 'required|exists:projects,id',
-            ]);
+            $projectIdExist = Project::where('id',$projectId)->exists();
+            if(!$projectIdExist)
+            {
+                $errors = 'The specified project ID is invalid.';
+                return $this->response->validationError($errors);
+            }
             $userID = Auth::user()->id;
             $existing = TimeLog::where('user_id', $userID)
                                ->whereNull('end_time')
                                ->first();
 
             if ($existing) {
-                $message = 'You already have a running timer.';
-                return $this->response->errorResponse($message, 400);
+                $message = 'You already have a running timer. Finish or Stop that';
+                return $this->response->errorResponse($message,$existing, 400);
             }
-
+            $project = Project::find($projectId);
+            $title = $project->title;
             $timeLog = TimeLog::create([
                 'user_id' => $userID,
-                'project_id' => $request->project_id,
+                'project_id' => $projectId,
+                'description' => $title.' has been started.',
                 'start_time' => now(),
             ]);
-            return $this->response->successResponse($timeLog, 'Timer started..');
+            $data = [
+                'user' => $timeLog->user->name,
+                'project' => $timeLog->project->title,
+                'start_time' => $timeLog->start_time,
+            ];
+            return $this->response->successResponse($data, 'Timer started..');
         } catch (\Throwable $th) {
             return $this->response->errorResponse($th->getMessage(), 500);
         }
    }
     //stop function start
-    public function stop(Request $request)
+    public function stop($projectId)
     {
         try {
-        $userID = Auth::user()->id;
-        $timeLog = TimeLog::where('user_id', $userID)
-                        ->whereNull('end_time')
-                        ->latest()
-                        ->first();
+            $projectIdExist = Project::where('id',$projectId)->exists();
 
-        if (!$timeLog) {
-            $message = 'No running timer found.';
-            return $this->response->errorResponse($message, 404);
-        }
+            if(!$projectIdExist)
+            {
+                $errors = 'The specified project ID is invalid.';
+                return $this->response->validationError($errors);
+            }
+            $userID = Auth::user()->id;
 
-        $timeLog->end_time = now();
-        $timeLog->hours = $timeLog->start_time->diffInMinutes($timeLog->end_time) / 60;
-        $timeLog->save();
+            $timeLog = TimeLog::where('user_id', $userID)
+                            ->where('project_id',$projectId)
+                            ->whereNull('end_time')
+                            ->latest()
+                            ->first();
 
-        return $this->response->successResponse($timeLog, 'Timer stopped.');
+            if (!$timeLog) {
+                $message = 'No active timer found. Please make sure you have started a timer for a valid project.';
+                return $this->response->errorResponse($message,404);
+            }
+
+            $endTime = Carbon::now();
+            $startTime = Carbon::parse($timeLog->start_time);
+
+            $diffInSeconds = $startTime->diffInSeconds($endTime);
+            $decimalHours = $diffInSeconds / 3600;
+
+            $hours = floor($diffInSeconds / 3600);
+            $minutes = floor(($diffInSeconds % 3600) / 60);
+            $seconds = $diffInSeconds % 60;
+
+            $formattedDuration = trim(sprintf(
+                '%s%s%s',
+                $hours ? $hours . ' hr ' : '',
+                $minutes ? $minutes . ' min ' : '',
+                $seconds ? $seconds . ' s' : ''
+            ));
+            $project = Project::find($projectId);
+            $title = $project->title;
+            $timeLog->description = $title.' has been stoped.';
+            $timeLog->end_time = $endTime;
+            $timeLog->hours = $decimalHours;
+            $timeLog->save();
+
+            $data = [
+                'user' => $timeLog->user->name,
+                'project' => $timeLog->project->title,
+                'start_time' => $timeLog->start_time,
+                'end_time'=>$timeLog->end_time,
+                'hour'=>$formattedDuration,
+            ];
+        return $this->response->successResponse($data, 'Timer stopped.');
         } catch (\Throwable $th) {
-            return $this->response->errorResponse($th->getMessage(), 500);
+            return $this->response->errorResponse($th->getMessage(),$th->getTrace(), 500);
         }
     }
 }

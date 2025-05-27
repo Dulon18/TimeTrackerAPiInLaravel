@@ -16,6 +16,11 @@ class TimeLog extends Model
         'description',
         'hour'
     ];
+    protected $casts = [
+        'start_time' => 'datetime',
+        'end_time' => 'datetime',
+    ];
+
     public function user()
     {
         return $this->belongsTo(User::class);

@@ -22,11 +22,12 @@ class ResponseService
         ], $code);
     }
 
-    public function errorResponse($error, $errorMessages = [], $code = 404)
+    public function errorResponse( $errorMessages,$error, $code = 404)
     {
     	$response = [
             'success' => 'failed',
-            'message' => $error,
+            'message' => $errorMessages ?? '',
+            'data' => $error ?? (object)[],
         ];
         if(!empty($errorMessages)){
             $response['data'] = $errorMessages;

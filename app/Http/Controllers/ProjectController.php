@@ -22,6 +22,7 @@ class ProjectController extends Controller
         try {
             $projects = Project::with('client')->get()->map(function ($project) {
                 return [
+                    'id'=>$project->id,
                     'title'       => $project->title,
                     'description' => $project->description,
                     'clientName'  => $project->client->name ?? 'Unknown',
@@ -43,7 +44,7 @@ class ProjectController extends Controller
             if($project == null)
             {
                 $response = "Data is not Found";
-                return $this->response->errorResponse($response);
+                return $this->response->errorResponse($response,$project);
             }
             $project->load('client');
             $project = [
@@ -85,7 +86,7 @@ class ProjectController extends Controller
             if($project == null)
             {
                 $response = "Data is not Found";
-                return $this->response->errorResponse($response);
+                return $this->response->errorResponse($response,$project);
             }
             $project->load('client');
             $project = [
@@ -108,7 +109,7 @@ class ProjectController extends Controller
             if($project == null)
             {
                 $response = "Data is not Found";
-                return $this->response->errorResponse($response);
+                return $this->response->errorResponse($response,$project);
             }
             return $this->response->successResponse($project, 'Project info deleted successfully');
          }
