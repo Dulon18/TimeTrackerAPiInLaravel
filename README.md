@@ -11,7 +11,7 @@
 
 # Set up or Clone process
 ## 1. Clone the repository
-git clone https://github.com/your-username/your-project.git
+git clone https://github.com/Dulon18/TimeTrackerAPiInLaravel.git
 cd your-project
 
 ## 2. Install dependencies
