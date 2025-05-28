@@ -8,7 +8,7 @@ use App\Services\ResponseService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
-
+use Barryvdh\DomPDF\Facade\Pdf;
 class TimeLogController extends Controller
 {
 
@@ -111,5 +111,51 @@ class TimeLogController extends Controller
         } catch (\Throwable $th) {
             return $this->response->errorResponse($th->getMessage(),$th->getTrace(), 500);
         }
+    }
+
+    public function exportPdf(Request $request)
+    {
+        $request->validate([
+            'client_id' => ['required', 'exists:clients,id'],
+            'project_id' => ['nullable', 'exists:projects,id'],
+            'from' => ['required', 'date', 'date_format:Y-m-d'],
+            'to' => ['required', 'date', 'date_format:Y-m-d', 'after_or_equal:from'],
+        ]);
+
+        if ($request->filled('project_id')) {
+            $project = Project::where('id', $request->project_id)
+                ->where('client_id', $request->client_id)
+                ->first();
+
+            if (!$project) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'The selected project does not belong to the given client.'
+                ], 422);
+            }
+        }
+
+        $from = Carbon::parse($request->from)->startOfDay();
+        $to = Carbon::parse($request->to)->endOfDay();
+
+        $logsQuery = TimeLog::with(['project.client'])
+            ->whereHas('project', fn($q) => $q->where('client_id', $request->client_id));
+
+        if ($request->filled('project_id')) {
+            $logsQuery->where('project_id', $request->project_id);
+        }
+
+        $logs = $logsQuery->whereBetween('start_time', [$from, $to])->get();
+
+        $clientName = $logs->first()?->project->client->name ?? 'Unknown';
+
+        $pdf = Pdf::loadView('logs.report', [
+            'logs' => $logs,
+            'from' => $from->toDateString(),
+            'to' => $to->toDateString(),
+            'clientName' => $clientName,
+        ]);
+        $filename = 'TimeLogReport_' . $from->toDateString() . '_to_' . $to->toDateString() . '.pdf';
+        return $pdf->download($filename);
     }
 }

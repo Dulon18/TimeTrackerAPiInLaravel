@@ -29,4 +29,6 @@ class TimeLog extends Model
     {
         return $this->belongsTo(Project::class);
     }
+
+
 }

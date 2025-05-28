@@ -37,6 +37,10 @@ Route::prefix('v1')->group(function()
         //report
         Route::get('/report', [ReportController::class, 'index']);
         Route::get('/report/summery', [ReportController::class, 'summary']);
+
+        //pdf export route
+        Route::get('/logs/export-pdf', [TimeLogController::class, 'exportPdf']);
+
     });
 });
 
